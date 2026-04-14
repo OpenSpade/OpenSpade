@@ -43,7 +43,7 @@ def get_binance_futures_pairs():
         print(f"获取交易对列表时未知错误: {e}")
         return []
 
-def get_binance_futures_klines(symbol, interval="1d", limit=100):
+def get_binance_futures_klines(symbol, interval="1d", limit=500):
     """
     获取币安期货合约的K线数据
     :param symbol: 交易对符号，如 BTCUSDT
