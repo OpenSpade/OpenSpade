@@ -288,9 +288,9 @@ class TestRiskManager(unittest.TestCase):
             strategy_id="test_strategy",
             entry_price=50000.0,
             entry_amount=5000.0,
-            stop_loss_ratio=0.05
+            stop_loss_ratio=0.20
         )
-        alert = self.risk_manager.update_strategy_price("test_strategy", 44000.0)
+        alert = self.risk_manager.update_strategy_price("test_strategy", 42000.0)
         self.assertEqual(alert, RiskAlert.LOSS_WARNING)
 
     def test_can_allocate_normal(self):
