@@ -1,0 +1,40 @@
+# Database files
+*.db
+
+# JSON output files
+*.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE configuration
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Log files
+*.log
+
+# Virtual environment
+venv/
+env/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
