@@ -162,10 +162,12 @@ class BinanceConnector:
                 for item in assets_items:
                     if(item.get('asset') == 'USDT'):
                         total = float(item.get('marginBalance', 0))
+                        free = float(item.get('availableBalance', 0))
+                        locked = float(item.get('initialMargin', 0))
                         assets.append({
                             'asset': 'USDT',
-                            'free': 0,
-                            'locked': 0,
+                            'free': free,
+                            'locked': locked,
                             'total': total
                         })
                 return assets
