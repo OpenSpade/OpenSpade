@@ -10,7 +10,7 @@ class BinanceConnector:
     def __init__(self, api_key: str = None, api_secret: str = None):
         self.api_key = api_key
         self.api_secret = api_secret
-        self.base_url = "https://api.binance.com"
+        self.base_url = "https://api1.binance.com"  # 使用api1以获得更好的性能
         self.futures_url = "https://fapi.binance.com"
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
