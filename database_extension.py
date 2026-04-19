@@ -101,6 +101,43 @@ def init_capital_pool_tables():
         )
     ''')
 
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS assets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_type TEXT NOT NULL, -- spot, futures
+            asset TEXT NOT NULL, -- USDT, BTC, etc.
+            free REAL NOT NULL DEFAULT 0,
+            locked REAL NOT NULL DEFAULT 0,
+            total REAL NOT NULL DEFAULT 0,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(asset_type, asset)
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS asset_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_type TEXT NOT NULL,
+            asset TEXT NOT NULL,
+            free REAL NOT NULL,
+            locked REAL NOT NULL,
+            total REAL NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS asset_sync_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sync_type TEXT NOT NULL, -- full, incremental
+            status TEXT NOT NULL, -- success, failed
+            start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            end_time TIMESTAMP,
+            error_message TEXT,
+            records_synced INTEGER DEFAULT 0
+        )
+    ''')
+
     cursor.execute("SELECT COUNT(*) FROM capital_pool WHERE pool_name = 'main'")
     if cursor.fetchone()[0] == 0:
         cursor.execute(
@@ -383,6 +420,145 @@ def get_pool_statistics() -> Dict:
         'total_allocated': total_allocated,
         'unresolved_alerts': unresolved_alerts,
         'stopped_strategies': stopped_strategies
+    }
+
+
+def save_asset(asset_data: Dict) -> bool:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            INSERT OR REPLACE INTO assets
+            (asset_type, asset, free, locked, total, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            asset_data['asset_type'],
+            asset_data['asset'],
+            asset_data['free'],
+            asset_data['locked'],
+            asset_data['total'],
+            datetime.now().isoformat()
+        ))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Failed to save asset: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def get_assets(asset_type: str = None) -> List[Dict]:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    if asset_type:
+        cursor.execute('''
+            SELECT asset_type, asset, free, locked, total, updated_at
+            FROM assets
+            WHERE asset_type = ?
+            ORDER BY asset
+        ''', (asset_type,))
+    else:
+        cursor.execute('''
+            SELECT asset_type, asset, free, locked, total, updated_at
+            FROM assets
+            ORDER BY asset_type, asset
+        ''')
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    assets = []
+    for row in rows:
+        assets.append({
+            'asset_type': row[0],
+            'asset': row[1],
+            'free': row[2],
+            'locked': row[3],
+            'total': row[4],
+            'updated_at': row[5]
+        })
+    return assets
+
+
+def log_asset_history(asset_data: Dict) -> bool:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            INSERT INTO asset_history
+            (asset_type, asset, free, locked, total, timestamp)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            asset_data['asset_type'],
+            asset_data['asset'],
+            asset_data['free'],
+            asset_data['locked'],
+            asset_data['total'],
+            datetime.now().isoformat()
+        ))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Failed to log asset history: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def log_asset_sync(sync_data: Dict) -> bool:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('''
+            INSERT INTO asset_sync_log
+            (sync_type, status, start_time, end_time, error_message, records_synced)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            sync_data['sync_type'],
+            sync_data['status'],
+            sync_data['start_time'],
+            sync_data.get('end_time'),
+            sync_data.get('error_message'),
+            sync_data.get('records_synced', 0)
+        ))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Failed to log asset sync: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def get_asset_statistics() -> Dict:
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM assets")
+    total_assets = cursor.fetchone()[0]
+
+    cursor.execute("SELECT SUM(total) FROM assets WHERE asset_type = 'spot'")
+    spot_total = cursor.fetchone()[0] or 0
+
+    cursor.execute("SELECT SUM(total) FROM assets WHERE asset_type = 'futures'")
+    futures_total = cursor.fetchone()[0] or 0
+
+    cursor.execute("SELECT COUNT(*) FROM asset_sync_log WHERE status = 'success' AND start_time >= datetime('now', '-24 hours')")
+    successful_syncs_24h = cursor.fetchone()[0]
+
+    conn.close()
+
+    return {
+        'total_assets': total_assets,
+        'spot_total': spot_total,
+        'futures_total': futures_total,
+        'total_portfolio': spot_total + futures_total,
+        'successful_syncs_24h': successful_syncs_24h
     }
 
 
