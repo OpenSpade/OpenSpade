@@ -310,3 +310,43 @@ class BinanceConnector:
             "position_count": len(active_positions),
             "timestamp": datetime.now().isoformat()
         }
+
+    def get_klines(self, symbol: str, interval: str = "1m", limit: int = 100) -> List[Dict]:
+        """
+        获取期货K线数据
+        interval: 时间间隔，如 1m, 3m, 5m, 15m, 30m, 1h, 2h, 4h, 6h, 8h, 12h, 1d, 3d, 1w, 1M
+        limit: 返回的K线数量
+        """
+        endpoint = "/fapi/v1/klines"
+        try:
+            params = {
+                "symbol": symbol,
+                "interval": interval,
+                "limit": limit
+            }
+            response = requests.get(
+                self.futures_url + endpoint,
+                params=params
+            )
+            if response.status_code == 200:
+                klines = response.json()
+                result = []
+                for kline in klines:
+                    result.append({
+                        "timestamp": kline[0],
+                        "open": float(kline[1]),
+                        "high": float(kline[2]),
+                        "low": float(kline[3]),
+                        "close": float(kline[4]),
+                        "volume": float(kline[5]),
+                        "close_time": kline[6],
+                        "quote_asset_volume": float(kline[7]),
+                        "number_of_trades": kline[8],
+                        "taker_buy_base_asset_volume": float(kline[9]),
+                        "taker_buy_quote_asset_volume": float(kline[10])
+                    })
+                return result
+            return []
+        except Exception as e:
+            print(f"Failed to get klines for {symbol}: {e}")
+            return []
