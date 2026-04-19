@@ -145,7 +145,7 @@ class BinanceConnector:
         if not self.api_key or not self.api_secret:
             return []
 
-        endpoint = "/fapi/v2/balance"
+        endpoint = "/fapi/v3/account"
 
         try:
             params = {"timestamp": self._get_timestamp(), "recvWindow": 60000}  # 60秒的时间窗口
@@ -157,16 +157,15 @@ class BinanceConnector:
             )
             if response.status_code == 200:
                 data = response.json()
+                assets_items = data.get('assets', [])
                 assets = []
-                for balance in data:
-                    free = float(balance.get('availableBalance', 0))
-                    locked = float(balance.get('crossWalletBalance', 0)) - free
-                    total = float(balance.get('crossWalletBalance', 0))
-                    if total > 0:
+                for item in assets_items:
+                    if(item.get('asset') == 'USDT'):
+                        total = float(item.get('marginBalance', 0))
                         assets.append({
-                            'asset': balance['asset'],
-                            'free': free,
-                            'locked': locked,
+                            'asset': 'USDT',
+                            'free': 0,
+                            'locked': 0,
                             'total': total
                         })
                 return assets
