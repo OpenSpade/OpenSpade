@@ -1,0 +1,2 @@
+[console_scripts]
+openspade = cli:cli

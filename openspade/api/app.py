@@ -1,9 +1,17 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_apscheduler import APScheduler
 from binance_connector import BinanceConnector
 
 app = Flask(__name__)
 CORS(app)  # 允许跨域请求
+
+# 配置 APScheduler
+app.config['SCHEDULER_API_ENABLED'] = True
+
+# 初始化调度器
+scheduler = APScheduler()
+scheduler.init_app(app)
 
 # 全局 BinanceConnector 实例
 connector = None
@@ -115,5 +123,13 @@ def get_portfolio_summary():
     return jsonify(summary)
 
 
+# 示例定时任务
+@scheduler.task('interval', id='test_task', seconds=10, misfire_grace_time=900)
+def test_task():
+    """每10秒执行一次的测试任务"""
+    print('Test task executed')
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # 启动调度器
+    scheduler.start()
+    app.run(debug=True, host='0.0.0.0', port=5001)

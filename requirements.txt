@@ -6,6 +6,7 @@ simplejson==3.19.1
 requests==2.31.0
 Flask==2.3.2
 Flask-Cors==4.0.0
+Flask-APScheduler==1.13.0
 pytz==2023.3
 peewee==3.16.2
 pymongo==4.3.3
