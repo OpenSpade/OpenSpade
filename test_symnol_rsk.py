@@ -20,6 +20,12 @@ try:
 except ImportError:
     pd = None
 
+try:
+    from tabulate import tabulate
+except ImportError:
+    print("缺少tabulate库，请先安装：pip install tabulate")
+    sys.exit(1)
+
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
@@ -383,14 +389,71 @@ class BinanceDelistingPredictor:
         results.sort(key=lambda x: x['score'], reverse=True)
         return results[:top_n]
 
+    def print_results_table(self, results: List[Dict], quote_asset: str, table_format: str = "grid"):
+        """使用tabulate打印格式化的结果表格"""
+        if not results:
+            print("没有找到符合条件的风险交易对。")
+            return
+
+        # 准备表格数据
+        table_data = []
+        headers = ["排名", "交易对", "风险评分", "24h成交量(USD)", "价格变化(%)",
+                   "成交量风险", "流动性风险", "价格风险", "活跃度风险"]
+
+        for i, pair in enumerate(results, 1):
+            details = pair['details']
+            # 根据风险评分高低添加颜色标记（可选，但需要在支持ANSI的终端中）
+            risk_level = "🔴" if pair['score'] > 0.7 else "🟡" if pair['score'] > 0.4 else "🟢"
+
+            row = [
+                i,
+                f"{risk_level} {pair['symbol']}",
+                f"{pair['score']:.4f}",
+                f"{pair['vol_usd']:,.2f}",
+                f"{pair['price_change_pct']:.2f}%",
+                f"{details['volume_risk']:.3f}",
+                f"{details['liquidity_risk']:.3f}",
+                f"{details['price_risk']:.3f}",
+                f"{details['activity_risk']:.3f}"
+            ]
+            table_data.append(row)
+
+        # 打印表头
+        print(f"\n{'=' * 100}")
+        print(f" 币安 {quote_asset} 交易对下架风险分析 TOP {len(results)}")
+        print(f"{'=' * 100}")
+        print(f"分析时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print(f"风险权重: 成交量={self.risk_weights['volume_decline']:.0%}, "
+              f"流动性={self.risk_weights['liquidity_depth']:.0%}, "
+              f"价格={self.risk_weights['price_performance']:.0%}, "
+              f"活跃度={self.risk_weights['trading_activity']:.0%}")
+
+        # 使用tabulate打印表格
+        print(tabulate(
+            table_data,
+            headers=headers,
+            tablefmt=table_format,
+            numalign="center",
+            stralign="left",
+            # 如果需要更紧凑的表格，取消下面注释
+            # disable_numparse=True,
+        ))
+
+        # 打印风险等级说明
+        print(f"\n风险等级: 🔴 高风险(>0.7) 🟡 中等风险(>0.4) 🟢 低风险(≤0.4)")
+
+        # 如果需要纯文本版本（不带emoji），可以再输出一份
+        if table_format == "grid":
+            print(f"\n提示: 可通过 --table-format 参数更改表格样式 (grid/simple/pipe/github等)")
+
     def export_results(self, results: List[Dict], format: str = "json") -> str:
         """导出结果为文件"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         if format == "json":
             filename = f"delisting_risk_{timestamp}.json"
-            with open(filename, 'w') as f:
-                json.dump(results, f, indent=2)
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(results, f, indent=2, ensure_ascii=False)
         elif format == "csv" and pd is not None:
             filename = f"delisting_risk_{timestamp}.csv"
             df = pd.DataFrame([{
@@ -400,54 +463,123 @@ class BinanceDelistingPredictor:
                 'price_change_pct': r['price_change_pct'],
                 **r['details']
             } for r in results])
-            df.to_csv(filename, index=False)
+            df.to_csv(filename, index=False, encoding='utf-8-sig')
         else:
             return ""
 
         return filename
 
+    def save_to_database(self, results: List[Dict], db_path: str = "delisting_risks.db"):
+        """保存结果到SQLite数据库（可选功能）"""
+        try:
+            import sqlite3
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+
+            # 创建表
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS risk_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    symbol TEXT,
+                    score REAL,
+                    vol_usd REAL,
+                    price_change_pct REAL,
+                    volume_risk REAL,
+                    liquidity_risk REAL,
+                    price_risk REAL,
+                    activity_risk REAL
+                )
+            ''')
+
+            # 插入数据
+            timestamp = datetime.now().isoformat()
+            for pair in results:
+                details = pair['details']
+                cursor.execute('''
+                    INSERT INTO risk_records 
+                    (timestamp, symbol, score, vol_usd, price_change_pct,
+                     volume_risk, liquidity_risk, price_risk, activity_risk)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    timestamp,
+                    pair['symbol'],
+                    pair['score'],
+                    pair['vol_usd'],
+                    pair['price_change_pct'],
+                    details['volume_risk'],
+                    details['liquidity_risk'],
+                    details['price_risk'],
+                    details['activity_risk']
+                ))
+
+            conn.commit()
+            conn.close()
+            logger.info(f"Results saved to database: {db_path}")
+        except Exception as e:
+            logger.error(f"Failed to save to database: {e}")
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Binance Delisting Risk Predictor")
+    parser = argparse.ArgumentParser(
+        description="币安下架风险预测器 - 分析并展示高风险交易对",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+使用示例:
+  python script.py                          # 默认分析USDT交易对
+  python script.py --quote BTC              # 分析BTC交易对
+  python script.py --top 10 --table-format github  # 显示前10个，GitHub风格
+  python script.py --export json            # 导出JSON文件
+  python script.py --export csv --db        # 导出CSV并保存到数据库
+        """
+    )
     parser.add_argument("--quote", default="USDT", help="Quote asset (default: USDT)")
     parser.add_argument("--top", type=int, default=20, help="Number of top risky pairs to show")
-    parser.add_argument("--threshold", type=float, default=1_000_000, help="Volume threshold")
-    parser.add_argument("--days", type=int, default=30, help="Days to analyze")
+    parser.add_argument("--threshold", type=float, default=1_000_000, help="Volume threshold (default: 1,000,000)")
+    parser.add_argument("--days", type=int, default=30, help="Days to analyze (default: 30)")
     parser.add_argument("--export", choices=["json", "csv", "none"], default="none", help="Export format")
-    parser.add_argument("--workers", type=int, default=5, help="Max worker threads")
+    parser.add_argument("--workers", type=int, default=5, help="Max worker threads (default: 5)")
+    parser.add_argument("--table-format", default="grid",
+                        choices=["grid", "simple", "pipe", "github", "pretty", "psql", "html", "fancy_grid"],
+                        help="Tabulate输出格式 (default: grid)")
+    parser.add_argument("--db", action="store_true", help="Save results to SQLite database")
 
     args = parser.parse_args()
 
+    # 创建预测器实例
     predictor = BinanceDelistingPredictor(
         volume_threshold=args.threshold,
         days_analysis=args.days,
         max_workers=args.workers
     )
 
-    risk_pairs = predictor.scan(quote_asset=args.quote, top_n=args.top)
+    try:
+        # 扫描风险交易对
+        print("正在分析币安交易对下架风险...")
+        risk_pairs = predictor.scan(quote_asset=args.quote, top_n=args.top)
 
-    if not risk_pairs:
-        print("No risky pairs found or error occurred.")
-        return
+        if not risk_pairs:
+            print("没有找到符合条件的风险交易对。")
+            return
 
-    # 打印结果
-    print("\n" + "=" * 80)
-    print(f"TOP {len(risk_pairs)} RISKY PAIRS ({args.quote})")
-    print("=" * 80)
-    print(f"{'Symbol':<12} {'Score':<8} {'Volume(USD)':<15} {'Price Change':<12} {'Risk Breakdown'}")
-    print("-" * 80)
+        # 使用tabulate格式化打印结果
+        predictor.print_results_table(risk_pairs, args.quote, args.table_format)
 
-    for p in risk_pairs:
-        details = p['details']
-        risk_breakdown = f"V:{details['volume_risk']:.2f} L:{details['liquidity_risk']:.2f} P:{details['price_risk']:.2f} A:{details['activity_risk']:.2f}"
-        print(
-            f"{p['symbol']:<12} {p['score']:<8.4f} {p['vol_usd']:<15.2f} {p['price_change_pct']:<12.2f}% {risk_breakdown}")
+        # 导出结果
+        if args.export != "none":
+            filename = predictor.export_results(risk_pairs, format=args.export)
+            if filename:
+                print(f"结果已导出至: {filename}")
 
-    # 导出结果
-    if args.export != "none":
-        filename = predictor.export_results(risk_pairs, format=args.export)
-        if filename:
-            print(f"\nResults exported to: {filename}")
+        # 保存到数据库
+        if args.db:
+            predictor.save_to_database(risk_pairs)
+
+    except KeyboardInterrupt:
+        print("\n\n程序被用户中断。")
+    except Exception as e:
+        logger.error(f"程序执行出错: {e}")
+        print(f"错误: {e}")
 
 
 if __name__ == "__main__":
