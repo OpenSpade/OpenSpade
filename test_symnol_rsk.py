@@ -26,6 +26,12 @@ except ImportError:
     print("缺少tabulate库，请先安装：pip install tabulate")
     sys.exit(1)
 
+try:
+    from prettytable import PrettyTable
+except ImportError:
+    print("缺少prettytable库，请先安装：pip install prettytable")
+    sys.exit(1)
+
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
@@ -390,33 +396,10 @@ class BinanceDelistingPredictor:
         return results[:top_n]
 
     def print_results_table(self, results: List[Dict], quote_asset: str, table_format: str = "grid"):
-        """使用tabulate打印格式化的结果表格"""
+        """使用PrettyTable打印格式化的结果表格"""
         if not results:
             print("没有找到符合条件的风险交易对。")
             return
-
-        # 准备表格数据
-        table_data = []
-        headers = ["排名", "交易对", "风险评分", "24h成交量(USD)", "价格变化(%)",
-                   "成交量风险", "流动性风险", "价格风险", "活跃度风险"]
-
-        for i, pair in enumerate(results, 1):
-            details = pair['details']
-            # 根据风险评分高低添加颜色标记（可选，但需要在支持ANSI的终端中）
-            risk_level = "🔴" if pair['score'] > 0.7 else "🟡" if pair['score'] > 0.4 else "🟢"
-
-            row = [
-                i,
-                f"{risk_level} {pair['symbol']}",
-                f"{pair['score']:.4f}",
-                f"{pair['vol_usd']:,.2f}",
-                f"{pair['price_change_pct']:.2f}%",
-                f"{details['volume_risk']:.3f}",
-                f"{details['liquidity_risk']:.3f}",
-                f"{details['price_risk']:.3f}",
-                f"{details['activity_risk']:.3f}"
-            ]
-            table_data.append(row)
 
         # 打印表头
         print(f"\n{'=' * 100}")
@@ -428,23 +411,48 @@ class BinanceDelistingPredictor:
               f"价格={self.risk_weights['price_performance']:.0%}, "
               f"活跃度={self.risk_weights['trading_activity']:.0%}")
 
-        # 使用tabulate打印表格
-        print(tabulate(
-            table_data,
-            headers=headers,
-            tablefmt=table_format,
-            numalign="center",
-            stralign="left",
-            # 如果需要更紧凑的表格，取消下面注释
-            # disable_numparse=True,
-        ))
+        # 使用PrettyTable创建表格
+        table = PrettyTable()
+        table.field_names = ["排名", "交易对", "风险评分", "24h成交量(USD)", "价格变化(%)",
+                           "成交量风险", "流动性风险", "价格风险", "活跃度风险"]
+        
+        # 设置表格样式
+        table.align = "l"  # 左对齐
+        table.align["排名"] = "c"  # 排名居中
+        table.align["风险评分"] = "c"  # 风险评分居中
+        table.align["24h成交量(USD)"] = "r"  # 成交量右对齐
+        table.align["价格变化(%)"] = "r"  # 价格变化右对齐
+        table.align["成交量风险"] = "c"  # 风险值居中
+        table.align["流动性风险"] = "c"
+        table.align["价格风险"] = "c"
+        table.align["活跃度风险"] = "c"
+        
+        # 添加数据行
+        for i, pair in enumerate(results, 1):
+            details = pair['details']
+            # 根据风险评分高低添加颜色标记
+            risk_level = "🔴" if pair['score'] > 0.7 else "🟡" if pair['score'] > 0.4 else "🟢"
+
+            table.add_row([
+                i,
+                f"{risk_level} {pair['symbol']}",
+                f"{pair['score']:.4f}",
+                f"{pair['vol_usd']:,.2f}",
+                f"{pair['price_change_pct']:.2f}%",
+                f"{details['volume_risk']:.3f}",
+                f"{details['liquidity_risk']:.3f}",
+                f"{details['price_risk']:.3f}",
+                f"{details['activity_risk']:.3f}"
+            ])
+
+        # 打印表格
+        print(table)
 
         # 打印风险等级说明
         print(f"\n风险等级: 🔴 高风险(>0.7) 🟡 中等风险(>0.4) 🟢 低风险(≤0.4)")
 
-        # 如果需要纯文本版本（不带emoji），可以再输出一份
-        if table_format == "grid":
-            print(f"\n提示: 可通过 --table-format 参数更改表格样式 (grid/simple/pipe/github等)")
+        # 提示信息
+        print(f"\n提示: 使用PrettyTable生成的表格支持自动列宽调整和美观的边框样式")
 
     def export_results(self, results: List[Dict], format: str = "json") -> str:
         """导出结果为文件"""
@@ -539,9 +547,6 @@ def main():
     parser.add_argument("--days", type=int, default=30, help="Days to analyze (default: 30)")
     parser.add_argument("--export", choices=["json", "csv", "none"], default="none", help="Export format")
     parser.add_argument("--workers", type=int, default=5, help="Max worker threads (default: 5)")
-    parser.add_argument("--table-format", default="grid",
-                        choices=["grid", "simple", "pipe", "github", "pretty", "psql", "html", "fancy_grid"],
-                        help="Tabulate输出格式 (default: grid)")
     parser.add_argument("--db", action="store_true", help="Save results to SQLite database")
 
     args = parser.parse_args()
@@ -562,8 +567,8 @@ def main():
             print("没有找到符合条件的风险交易对。")
             return
 
-        # 使用tabulate格式化打印结果
-        predictor.print_results_table(risk_pairs, args.quote, args.table_format)
+        # 使用PrettyTable格式化打印结果
+        predictor.print_results_table(risk_pairs, args.quote)
 
         # 导出结果
         if args.export != "none":
