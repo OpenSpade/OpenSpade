@@ -1,45 +1,122 @@
 # OpenSpade - Binance Futures Trading System
 
-A comprehensive cryptocurrency trading system for Binance futures markets, featuring capital pool management, automated trading strategies, and risk management.
+A comprehensive cryptocurrency trading system for Binance futures markets, featuring capital pool management, automated trading strategies, real-time risk control, AI-powered strategy optimization, and multi-channel notifications.
 
 ## Features
 
 - **Binance API Integration**: Connect to Binance spot and futures accounts to fetch balances, positions, and prices
-- **Trading Strategies**: Support for Grid and DCA (Dollar Cost Averaging) strategies
+- **Trading Strategies**: Support for Grid, DCA (Dollar Cost Averaging), Trend Following, Mean Reversion, and Momentum strategies
 - **Capital Pool Management**: Track and allocate funds across multiple trading strategies
-- **Risk Management**: Built-in risk controls including position limits, drawdown protection, and leverage checks
+- **Risk Management**: Multi-level risk controls (LOW/MEDIUM/HIGH/CRITICAL) including position limits, drawdown protection, and stop condition enforcement
 - **Technical Analysis**: Calculate technical indicators (RSI, MACD, MA, Bollinger Bands) and generate trading signals
-- **Data Persistence**: SQLite database for storing trading data, strategies, and risk records
+- **AI Agent**: Automated strategy development with genetic algorithm optimization (DEAP)
+- **Asset Sync**: Automatic periodic synchronization of Binance account assets with local database
+- **Notification System**: Multi-channel alerts via DingTalk, Telegram, Email, SMS, and Voice with priority-based routing
+- **REST API**: Flask-based API server with scheduled task support for external integrations
+- **CLI Interface**: Full-featured command-line tool for account management, strategy creation, risk configuration, and notifications
+- **Data Persistence**: SQLite database for storing trading data, strategies, risk records, and asset history
+- **Market Monitoring**: Binance delisting announcement crawling and volume breakout detection
 
 ## Project Structure
 
 ```
 OpenSpade/
-├── binance_connector.py       # Binance API connection module
-├── capital_pool.py            # Capital pool and strategy management
-├── risk_manager.py            # Risk control and monitoring
-├── binance_futures_scraper.py # Market data scraping and analysis
-├── database_extension.py      # Database persistence layer
-├── requirements.txt           # Python dependencies
+├── openspade/                          # Core package
+│   ├── gateway/
+│   │   └── binance_connector.py        # Binance API connection module
+│   ├── db/
+│   │   └── database_extension.py       # SQLite persistence layer
+│   ├── cli/
+│   │   └── cli.py                      # CLI interface (click-based)
+│   ├── api/
+│   │   └── app.py                      # Flask REST API server
+│   ├── ai/
+│   │   └── agent.py                    # AI agent for strategy optimization
+│   ├── strategy/
+│   │   ├── trend_following_strategy.py # Trend following strategy
+│   │   ├── mean_reversion_strategy.py  # Mean reversion strategy
+│   │   └── momentum_strategy.py        # Momentum strategy
+│   ├── messsage/
+│   │   └── notification.py             # Multi-channel notification system
+│   ├── app/
+│   │   ├── signal/                     # Signal generation module
+│   │   └── crawl_binance_delisting.py  # Delisting announcement crawler
+│   └── asset_sync.py                   # Asset synchronization service
+├── capital_pool.py                     # Capital pool and strategy management
+├── risk_manager.py                     # Risk control and monitoring
+├── binance_futures_scraper.py          # Market data scraping and analysis
+├── main.py                             # Application entry point
+├── setup.py                            # Package configuration
+├── requirements.txt                    # Python dependencies
+├── frontend/                           # Vue.js frontend (Vite)
+├── examples/
+│   └── ai_agent_example.py            # AI agent usage example
 └── tests/
-    └── test_capital_pool.py   # Unit tests
+    ├── test_capital_pool.py            # Capital pool unit tests
+    ├── test_db.py                      # Database unit tests
+    └── test_openspade_db.py            # OpenSpade DB integration tests
 ```
 
 ## Installation
 
-1. Clone the repository
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd OpenSpade
+```
+
 2. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
+3. Install as a package (optional, enables `openspade` CLI command):
+
+```bash
+pip install -e .
+```
+
 ## Dependencies
 
-- `six>=1.16.0`
-- `requests` (for Binance API calls)
-- `pandas` (for data manipulation)
-- `numpy` (for numerical calculations)
+### Core
+
+- `six>=1.16.0` - Python 2/3 compatibility
+- `requests>=2.28.0` - Binance API HTTP client
+- `click>=8.0.0` - CLI framework
+- `twilio>=8.0.0` - SMS/Voice notifications
+
+### Data Processing
+
+- `numpy` - Numerical calculations
+- `pandas` - Data analysis and indicator computation
+- `simplejson` - JSON processing
+
+### Web Framework
+
+- `Flask` - REST API server
+- `Flask-Cors` - Cross-origin request support
+- `Flask-APScheduler` - Scheduled task management
+
+### Database
+
+- `peewee` - SQLite ORM
+- `pymongo` - MongoDB support
+
+### Visualization
+
+- `matplotlib`, `seaborn`, `plotly` - Data visualization
+- `PySide6`, `pyqtgraph`, `QDarkStyle` - Desktop GUI
+
+### AI & Optimization
+
+- `deap` - Genetic algorithm framework for strategy optimization
+
+### Web Scraping
+
+- `selenium`, `webdriver_manager` - Browser automation
+- `beautifulsoup4` - HTML parsing
 
 ## Quick Start
 
@@ -125,6 +202,68 @@ analysis = analyze_trading_pair("BTCUSDT")
 results = analyze_multiple_pairs(pairs, max_pairs=20)
 ```
 
+### 6. Asset Synchronization
+
+```python
+from openspade.asset_sync import AssetSync
+
+sync = AssetSync(api_key='your_api_key', api_secret='your_api_secret')
+
+# One-time sync
+result = sync.sync_assets()
+
+# Start periodic sync (background thread)
+sync.start()
+```
+
+## CLI Usage
+
+The `openspade` CLI provides full system management:
+
+```bash
+# Show system info
+openspade info
+
+# Binance account commands
+openspade binance balance --api-key <KEY> --api-secret <SECRET>
+openspade binance positions --api-key <KEY> --api-secret <SECRET>
+
+# Capital pool management
+openspade capital init 10000
+openspade capital grid grid_1 BTCUSDT 1000 --grid-num 10 --grid-range 0.10
+openspade capital dca dca_1 ETHUSDT 500 --dca-interval 3600
+
+# Risk management
+openspade risk config --max-drawdown 0.20 --max-position-ratio 0.8
+openspade risk check 1000 10000 5000
+
+# Notifications
+openspade notify send "Alert Title" "Alert Content" --priority high
+```
+
+## REST API
+
+Start the API server:
+
+```bash
+python -m openspade.api.app
+```
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/init` | Initialize Binance connector |
+| GET | `/api/assets/spot` | Get spot account assets |
+| GET | `/api/assets/futures` | Get futures account assets |
+| GET | `/api/assets/all` | Get all account assets |
+| GET | `/api/assets/total` | Get total asset value |
+| GET | `/api/positions` | Get all futures positions |
+| GET | `/api/positions/<symbol>` | Get specific position |
+| GET | `/api/prices/<symbol>` | Get current price |
+| GET | `/api/prices` | Get all prices |
+| GET | `/api/portfolio/summary` | Get portfolio summary |
+
 ## API Reference
 
 ### BinanceConnector
@@ -176,12 +315,26 @@ Parameters:
 - `dca_interval`: Interval between DCA purchases (seconds)
 - `dca_amount_ratio`: Ratio of current amount to invest per DCA
 
+### Trend Following Strategy
+
+Follows market trends using moving average crossovers and trend indicators.
+
+### Mean Reversion Strategy
+
+Identifies overbought/oversold conditions and trades on price reversion to the mean.
+
+### Momentum Strategy
+
+Captures price momentum using rate-of-change and momentum indicators.
+
 ## Risk Levels
 
-- **LOW**: Normal operation
-- **MEDIUM**: Drawdown warning triggered
-- **HIGH**: Position full or multiple warnings
-- **CRITICAL**: Drawdown stop or critical risk detected
+| Level | Condition | Action |
+|-------|-----------|--------|
+| **LOW** | Normal operation | Continue trading |
+| **MEDIUM** | Drawdown warning triggered | Alert notification |
+| **HIGH** | Position full or multiple warnings | Restrict new allocations |
+| **CRITICAL** | Drawdown stop or critical risk detected | Auto-liquidation triggered |
 
 ## Database Tables
 
@@ -193,6 +346,15 @@ Parameters:
 - `fund_allocations`: Fund allocation records
 - `risk_records`: Risk tracking records
 - `risk_alerts`: Risk alert history
+- `assets`: Current asset snapshots
+- `asset_history`: Historical asset records
+- `asset_sync_log`: Synchronization audit log
+
+## Running Tests
+
+```bash
+pytest tests/
+```
 
 ## License
 
