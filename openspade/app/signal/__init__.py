@@ -111,7 +111,7 @@ from typing import Any, Callable, Dict, List, Optional
 from abc import ABC, abstractmethod
 import threading
 import time
-from binance_connector import BinanceConnector
+from openspade.gateway.binance_connector import BinanceConnector
 
 
 class SignalType(Enum):

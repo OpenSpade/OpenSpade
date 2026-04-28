@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_apscheduler import APScheduler
-from binance_connector import BinanceConnector
+from openspade.gateway.binance_connector import BinanceConnector
 
 app = Flask(__name__)
 CORS(app)  # 允许跨域请求

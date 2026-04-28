@@ -1,16 +1,12 @@
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 import os
 import time
-import json
-import importlib.util
-from datetime import datetime, timedelta
+from datetime import datetime
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LinearRegression
 from deap import base, creator, tools, algorithms
 
-from binance_connector import BinanceConnector
+from openspade.gateway.binance_connector import BinanceConnector
 
 
 class AIAgent:

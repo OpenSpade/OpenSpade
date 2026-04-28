@@ -2,16 +2,14 @@
 import click
 import sys
 from typing import Optional
-from binance_connector import BinanceConnector
+from openspade.gateway.binance_connector import BinanceConnector
 from capital_pool import CapitalPool, GridStrategy, DCAStrategy
 from risk_manager import RiskManager, RiskConfig
-from database_extension import init_capital_pool_tables
-from notification import (
+from openspade.db.database_extension import init_capital_pool_tables
+from openspade.messsage.notification import (
     NotificationManager,
     NotificationMessage,
-    NotificationType,
-    NotificationPriority,
-    create_notification_manager
+    NotificationPriority
 )
 
 

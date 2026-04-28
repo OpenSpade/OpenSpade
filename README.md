@@ -46,14 +46,15 @@ pip install -r requirements.txt
 ### 1. Initialize Database
 
 ```python
-from database_extension import init_capital_pool_tables
+from openspade.db.database_extension import init_capital_pool_tables
+
 init_capital_pool_tables()
 ```
 
 ### 2. Connect to Binance
 
 ```python
-from binance_connector import BinanceConnector
+from openspade.gateway.binance_connector import BinanceConnector
 
 connector = BinanceConnector(api_key='your_api_key', api_secret='your_api_secret')
 

@@ -1,5 +1,5 @@
 import os
-from binance_connector import BinanceConnector
+from openspade.gateway.binance_connector import BinanceConnector
 
 # 获取API密钥
 api_key = os.getenv('BINANCE_API_KEY')

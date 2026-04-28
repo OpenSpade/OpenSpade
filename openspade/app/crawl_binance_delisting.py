@@ -13,7 +13,7 @@ DETAIL_API_URL = "https://www.binance.com/bapi/composite/v1/public/cms/article/d
 CATALOG_ID = 161  # 下架讯息
 PAGE_SIZE = 20
 MAX_RETRIES = 5
-OUTPUT_FILE = "binance_delisting_announcements.json"
+OUTPUT_FILE = "../../binance_delisting_announcements.json"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "

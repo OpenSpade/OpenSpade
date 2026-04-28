@@ -3,10 +3,8 @@
 测试资产同步功能
 """
 
-import sys
-import os
-from asset_sync import AssetSync
-from database_extension import get_assets, get_asset_statistics, init_capital_pool_tables
+from openspade.asset_sync import AssetSync
+from openspade.db.database_extension import get_assets, get_asset_statistics, init_capital_pool_tables
 
 
 def test_asset_sync():

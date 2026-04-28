@@ -4,11 +4,11 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 
-DB_FILE = "binance_futures.db"
+DB_FILE = "../../openspadee.db"
 
 
-def init_capital_pool_tables():
-    conn = sqlite3.connect(DB_FILE)
+def init_capital_pool_tables(db_file=None):
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     cursor.execute('''
@@ -149,8 +149,8 @@ def init_capital_pool_tables():
     print("Capital pool tables initialized successfully")
 
 
-def save_strategy(strategy_data: Dict) -> bool:
-    conn = sqlite3.connect(DB_FILE)
+def save_strategy(strategy_data: Dict, db_file=None) -> bool:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     try:
@@ -181,8 +181,8 @@ def save_strategy(strategy_data: Dict) -> bool:
         conn.close()
 
 
-def get_strategy(strategy_id: str) -> Optional[Dict]:
-    conn = sqlite3.connect(DB_FILE)
+def get_strategy(strategy_id: str, db_file=None) -> Optional[Dict]:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     cursor.execute('''
@@ -213,8 +213,8 @@ def get_strategy(strategy_id: str) -> Optional[Dict]:
     return None
 
 
-def get_all_strategies(state: str = None) -> List[Dict]:
-    conn = sqlite3.connect(DB_FILE)
+def get_all_strategies(state: str = None, db_file=None) -> List[Dict]:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     if state:
@@ -252,8 +252,8 @@ def get_all_strategies(state: str = None) -> List[Dict]:
     return strategies
 
 
-def update_pool_status(pool_data: Dict) -> bool:
-    conn = sqlite3.connect(DB_FILE)
+def update_pool_status(pool_data: Dict, db_file=None) -> bool:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     try:
@@ -277,8 +277,8 @@ def update_pool_status(pool_data: Dict) -> bool:
         conn.close()
 
 
-def get_pool_status() -> Dict:
-    conn = sqlite3.connect(DB_FILE)
+def get_pool_status(db_file=None) -> Dict:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     cursor.execute('''
@@ -301,8 +301,8 @@ def get_pool_status() -> Dict:
     return {}
 
 
-def log_capital_operation(operation_data: Dict) -> bool:
-    conn = sqlite3.connect(DB_FILE)
+def log_capital_operation(operation_data: Dict, db_file=None) -> bool:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     try:
@@ -331,8 +331,8 @@ def log_capital_operation(operation_data: Dict) -> bool:
         conn.close()
 
 
-def save_risk_record(record_data: Dict) -> bool:
-    conn = sqlite3.connect(DB_FILE)
+def save_risk_record(record_data: Dict, db_file=None) -> bool:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     try:
@@ -363,8 +363,8 @@ def save_risk_record(record_data: Dict) -> bool:
         conn.close()
 
 
-def log_risk_alert(alert_data: Dict) -> bool:
-    conn = sqlite3.connect(DB_FILE)
+def log_risk_alert(alert_data: Dict, db_file=None) -> bool:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     try:
@@ -393,8 +393,8 @@ def log_risk_alert(alert_data: Dict) -> bool:
         conn.close()
 
 
-def get_pool_statistics() -> Dict:
-    conn = sqlite3.connect(DB_FILE)
+def get_pool_statistics(db_file=None) -> Dict:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM strategies WHERE state = 'active'")
@@ -423,8 +423,8 @@ def get_pool_statistics() -> Dict:
     }
 
 
-def save_asset(asset_data: Dict) -> bool:
-    conn = sqlite3.connect(DB_FILE)
+def save_asset(asset_data: Dict, db_file=None) -> bool:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     try:
@@ -449,8 +449,8 @@ def save_asset(asset_data: Dict) -> bool:
         conn.close()
 
 
-def get_assets(asset_type: str = None) -> List[Dict]:
-    conn = sqlite3.connect(DB_FILE)
+def get_assets(asset_type: str = None, db_file=None) -> List[Dict]:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     if asset_type:
@@ -483,8 +483,8 @@ def get_assets(asset_type: str = None) -> List[Dict]:
     return assets
 
 
-def log_asset_history(asset_data: Dict) -> bool:
-    conn = sqlite3.connect(DB_FILE)
+def log_asset_history(asset_data: Dict, db_file=None) -> bool:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     try:
@@ -509,8 +509,8 @@ def log_asset_history(asset_data: Dict) -> bool:
         conn.close()
 
 
-def log_asset_sync(sync_data: Dict) -> bool:
-    conn = sqlite3.connect(DB_FILE)
+def log_asset_sync(sync_data: Dict, db_file=None) -> bool:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     try:
@@ -535,8 +535,8 @@ def log_asset_sync(sync_data: Dict) -> bool:
         conn.close()
 
 
-def get_asset_statistics() -> Dict:
-    conn = sqlite3.connect(DB_FILE)
+def get_asset_statistics(db_file=None) -> Dict:
+    conn = sqlite3.connect(db_file or DB_FILE)
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM assets")

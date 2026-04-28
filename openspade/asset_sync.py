@@ -1,9 +1,9 @@
 import time
 import threading
 from datetime import datetime
-from typing import Dict, List, Optional
-from binance_connector import BinanceConnector
-from database_extension import save_asset, log_asset_history, log_asset_sync, get_asset_statistics
+from typing import Dict, Optional
+from openspade.gateway.binance_connector import BinanceConnector
+from openspade.db.database_extension import save_asset, log_asset_history, log_asset_sync, get_asset_statistics
 
 
 class AssetSync:

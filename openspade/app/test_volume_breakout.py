@@ -288,14 +288,20 @@ class BinanceVolumeBreakoutScreener:
                     crossovers.append("MA100")
                     break
 
-        # ── 子评分3：均线多头排列 (权重 0.3) ──
+        # ── 子评分3：均线排列 (权重 0.3) ──
+        # 7>25>100: 完全多头排列
+        # 100>7>25: 短期多头但尚未突破长期均线，蓄势待发
+        # 7>25:     短期多头
         bullish_alignment = ma7 > ma25 > ma100
+        approaching_breakout = ma100 > ma7 > ma25  # 100>7>25
         partial_alignment = ma7 > ma25
 
         if bullish_alignment:
             alignment_score = 1.0
+        elif approaching_breakout:
+            alignment_score = 0.6
         elif partial_alignment:
-            alignment_score = 0.5
+            alignment_score = 0.4
         else:
             alignment_score = 0.0
 
@@ -318,6 +324,8 @@ class BinanceVolumeBreakoutScreener:
             "above_ma25": above_ma25,
             "above_ma100": above_ma100,
             "bullish_alignment": bullish_alignment,
+            "approaching_breakout": approaching_breakout,
+            "partial_alignment": partial_alignment,
             "recent_crossover": crossover_str,
         }
 
@@ -392,6 +400,10 @@ class BinanceVolumeBreakoutScreener:
                 ma = detail["ma"]
                 if ma["bullish_alignment"]:
                     return "7>25>100"
+                if ma.get("approaching_breakout"):
+                    return "100>7>25"
+                if ma.get("partial_alignment"):
+                    return "7>25"
                 parts = []
                 if ma["above_ma7"]:
                     parts.append("↑7")
@@ -528,7 +540,7 @@ class BinanceVolumeBreakoutScreener:
 
         print(f"\n突破强度: 🔴 强(>0.7) 🟡 中(>0.4) 🟢 弱(≤0.4)")
         print(f"量比 = 当前成交量 / 20周期均量, >2.0x 视为明显放量")
-        print(f"均线状态: 7>25>100 = 多头排列, ↑N = 价格在MAN之上")
+        print(f"均线状态: 7>25>100 = 完全多头排列, 100>7>25 = 短期多头蓄势待突破MA100, 7>25 = 短期多头")
 
     def export_results(self, results: List[Dict], fmt: str = "json") -> str:
         """导出结果为文件"""
