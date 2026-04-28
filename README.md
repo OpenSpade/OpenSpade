@@ -165,7 +165,7 @@ pool.allocate_funds(grid_strategy, 1000.0)
 ### 4. Risk Management
 
 ```python
-from risk_manager import RiskManager, RiskConfig
+from tests.risk_manager import RiskManager, RiskConfig
 
 config = RiskConfig(
     max_position_ratio=0.8,

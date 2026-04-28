@@ -5,10 +5,10 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from capital_pool import (
-    CapitalPool, Strategy, GridStrategy, DCAStrategy,
-    StrategyType, StrategyState, FundAllocation
+    CapitalPool, GridStrategy, DCAStrategy,
+    StrategyType, StrategyState
 )
-from risk_manager import (
+from tests.risk_manager import (
     RiskManager, RiskConfig, RiskLevel, RiskAlert,
     CapitalPoolWithRisk
 )
