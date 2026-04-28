@@ -27,7 +27,7 @@ from openspade.db.database_extension import (
 )
 
 
-REAL_DB_PATH = "/Users/rocky/work/openspade/openspade/.openspade/openspade.db"
+REAL_DB_PATH = "/.openspade/database.db"
 TEST_DB_FILE = "test_openspade_unit.db"
 
 

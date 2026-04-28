@@ -1,8 +1,0 @@
-binance_connector
-binance_futures_scraper
-capital_pool
-cli
-database_extension
-notification
-openspade
-risk_manager

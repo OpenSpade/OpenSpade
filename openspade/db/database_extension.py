@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 
-DB_FILE = "../../openspadee.db"
+DB_FILE = "../../.openspade/test_database.db"
 
 
 def init_capital_pool_tables(db_file=None):
