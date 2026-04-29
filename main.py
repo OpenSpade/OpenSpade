@@ -1,11 +1,8 @@
-
 from openspade.app_factory import create_app
-from openspade.scheduler import start_scheduler
 
 
 def main():
     app = create_app()
-    start_scheduler()
     app.run(debug=False, host='0.0.0.0', port=5000)
 
 

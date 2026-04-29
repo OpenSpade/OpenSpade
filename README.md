@@ -205,7 +205,7 @@ results = analyze_multiple_pairs(pairs, max_pairs=20)
 ### 6. Asset Synchronization
 
 ```python
-from openspade.asset_sync import AssetSync
+from openspade.scheduler.asset_sync import AssetSync
 
 sync = AssetSync(api_key='your_api_key', api_secret='your_api_secret')
 
