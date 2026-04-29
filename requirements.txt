@@ -39,7 +39,6 @@ importlib-metadata==6.6.0
 
 # Web爬取
 selenium~=4.24.0
-webdriver_manager
 beautifulsoup4# OpenSpade 依赖项
 # 核心依赖
 six>=1.16.0
