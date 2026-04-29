@@ -2,12 +2,11 @@ import unittest
 import os
 import sys
 import logging
-from pathlib import Path
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from openspade.logger import logger, get_logger, _reset_logger_config
-from openspade.utility import TEMP_DIR
+from openspade.log.logger import get_logger, _reset_logger_config
+from openspade.utils.utility import TEMP_DIR
 
 
 class TestLogger(unittest.TestCase):

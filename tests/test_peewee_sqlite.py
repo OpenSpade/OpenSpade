@@ -1,7 +1,7 @@
 import peewee
 from datetime import datetime
 
-from openspade.utility import TEMP_DIR
+from openspade.utils.utility import TEMP_DIR
 
 # 1. 定义数据库（这里使用 SQLite，也可换成 MySQL/PostgreSQL）
 db = peewee.SqliteDatabase(TEMP_DIR.joinpath("database.db"))

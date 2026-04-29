@@ -1,1 +1,1 @@
-from .logger import logger, get_logger
+from openspade.log.logger import logger, get_logger
