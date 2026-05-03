@@ -2,6 +2,15 @@
 
 A comprehensive cryptocurrency trading system for Binance futures markets, featuring capital pool management, automated trading strategies, real-time risk control, AI-powered strategy optimization, and multi-channel notifications.
 
+[![GitHub stars](https://img.shields.io/github/stars/rocky/OpenSpade?style=social)](https://github.com/rocky/OpenSpade/stargazers)
+[![GitHub license](https://img.shields.io/github/license/rocky/OpenSpade)](https://github.com/rocky/OpenSpade/blob/main/LICENSE)
+[![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+## Keywords
+
+trading, binance, cryptocurrency, futures, bot, ai, algorithmic-trading, quantitative-trading, automated-trading, risk-management, technical-analysis, grid-trading, dca, trend-following, mean-reversion, momentum, api, python, flask, react, vue
+
 ## Features
 
 - **Binance API Integration**: Connect to Binance spot and futures accounts to fetch balances, positions, and prices
@@ -358,4 +367,4 @@ pytest tests/
 
 ## License
 
-MIT License
+MIT License. See [LICENSE](LICENSE) for details.
